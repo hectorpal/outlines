@@ -4,7 +4,8 @@ from outlines.fsm.guide import RegexGuide
 from outlines.generate.api import SequenceGenerator, SequenceGeneratorAdapter
 from outlines.models import OpenAI
 from outlines.models.llamacpp import LlamaCpp
-from outlines.models.vllm import VLLM
+
+# from outlines.models.vllm import VLLM
 from outlines.samplers import Sampler, multinomial
 
 
@@ -49,16 +50,16 @@ def regex_llamacpp(
     return SequenceGeneratorAdapter(model, logits_processor, sampler)
 
 
-@regex.register(VLLM)
-def regex_vllm(
-    model: VLLM,
-    regex_str: str,
-    sampler: Sampler = multinomial(),
-):
-    from outlines.integrations.vllm import RegexLogitsProcessor
+# @regex.register(VLLM)
+# def regex_vllm(
+#     model: VLLM,
+#     regex_str: str,
+#     sampler: Sampler = multinomial(),
+# ):
+#     from outlines.integrations.vllm import RegexLogitsProcessor
 
-    logits_processor = RegexLogitsProcessor(regex_str, model.model)
-    return SequenceGeneratorAdapter(model, logits_processor, sampler)
+#     logits_processor = RegexLogitsProcessor(regex_str, model.model)
+#     return SequenceGeneratorAdapter(model, logits_processor, sampler)
 
 
 @regex.register(OpenAI)
