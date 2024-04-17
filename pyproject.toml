@@ -54,7 +54,7 @@ test = [
     "llama-cpp-python",
     "huggingface_hub",
     "openai>=1.0.0",
-    "vllm",
+    # "vllm",
     "torch",
     "transformers",
 ]
