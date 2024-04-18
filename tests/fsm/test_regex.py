@@ -17,6 +17,7 @@ from outlines.fsm.regex import (
     make_deterministic_fsm,
     walk_fsm,
 )
+from outlines.fsm.types import FLOAT
 from outlines.models.transformers import TransformerTokenizer
 
 
@@ -438,6 +439,31 @@ def test_make_byte_level_fsm(regex, string, should_accept):
         assert byte_state == str_state
         assert mix_state == str_state
         assert mix_state_utf8 == str_state
+
+
+@pytest.mark.parametrize(
+    "regex,string,should_accept",
+    [
+        ("[a-c]+", "😀", False),
+        ("[^a-c]+", "😀", True),
+        (FLOAT, "34E.2e46200", False),
+        (FLOAT, "34E.2", False),
+        (FLOAT, "34E", False),
+        (FLOAT, "0.2e+46200", True),
+    ],
+)
+def test_byte_level_regex(regex, string, should_accept):
+    regex_pattern = interegular.parse_pattern(regex)
+    fsm = regex_pattern.to_fsm()
+    assert fsm.accepts(string) == should_accept
+    fsm = fsm.reduce()
+    assert fsm.accepts(string) == should_accept
+
+    for keep_utf8 in [False, True]:
+        byte_fsm = make_byte_level_fsm(fsm, keep_utf8=keep_utf8)
+        assert byte_fsm.accepts(to_bytes(string)) == should_accept
+        regex_fsm, _ = make_deterministic_fsm(byte_fsm)
+        assert regex_fsm.accepts(to_bytes(string)) == should_accept
 
 
 @pytest.mark.skip(reason="Only for local profiling")
