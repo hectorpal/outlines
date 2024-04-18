@@ -175,7 +175,31 @@ def is_generation_finished(fsms: List["Guide"], fsm_states: List[int]) -> bool:
     Whether all sequences are finished sampling.
 
     """
-    return all([fsm.is_final_state(state) for fsm, state in zip(fsms, fsm_states)])
+    # This is causing this test to fail:
+    # FAILED tests/generate/test_integration_transformers.py::test_transformers_integration_float
+    # ValueError: could not convert string to float: '34E.2e46200'
+    all_final = True
+    for fsm, state in zip(fsms, fsm_states):
+        # if fsm has attributes states_to_token_maps
+        if hasattr(fsm, "states_to_token_maps"):
+            # if state has successors, it's not final
+            if (
+                state in fsm.states_to_token_maps
+                and len(fsm.states_to_token_maps[state]) > 0
+            ):
+                all_final = False
+                break
+            # This is not correct, as a future states might not lead to a solution
+            # If there were a single fsm, then perhaps it's safe,
+            # assuming the fsm has been reduced and all the tokens have likelihood > 0
+            # Otherwise, I'm not sure about the semantic of multiple fsms.
+        else:
+            # Probably StopAtEOSGuide
+            if not fsm.is_final_state(state):
+                all_final = False
+                break
+    return all_final
+    # return all([fsm.is_final_state(state) for fsm, state in zip(fsms, fsm_states)])
 
 
 def update_token_ids(
